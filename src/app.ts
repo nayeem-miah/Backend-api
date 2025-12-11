@@ -1,7 +1,7 @@
-import express, { Application, Request, Response } from "express";
 import cors from "cors";
-import notFound from "./app/middlewares/notFound";
+import express, { Application, Request, Response } from "express";
 import globalErrorHandler from "./app/middlewares/globalErrorHandler";
+import notFound from "./app/middlewares/notFound";
 
 
 const app: Application = express();
@@ -18,9 +18,12 @@ app.use(
 );
 
 app.get("/", (req: Request, res: Response) => {
-    res.send("Backend API Running...");
+    res.json({
+        success: true,
+        statusCode: 200,
+        message: "Welcome to SMT-Project Backend API"
+    });
 });
-
 
 app.use(globalErrorHandler);
 

@@ -1,19 +1,17 @@
 /* eslint-disable no-console */
 import http, { Server } from "http";
-import app from "./app";
-import dotenv from "dotenv";
 import mongoose from "mongoose";
+import app from "./app";
+import config from "./app/config";
 
-dotenv.config();
 
 let server: Server | null = null;
-const port = process.env.PORT || 5000;
-
+const port = config.port || 5000;
 
 async function connectDb(): Promise<void> {
     try {
         // ? connect to database
-        const mongoUri = process.env.MONGO_URI || "mongodb://localhost:27017/mydatabase";
+        const mongoUri = config.database_url || "mongodb://localhost:27017/mydatabase";
         if (!mongoUri) {
             throw new Error("MONGO_URI environment variable is required");
         }

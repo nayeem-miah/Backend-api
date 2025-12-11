@@ -1,51 +1,65 @@
+/* eslint-disable no-console */
 import http, { Server } from "http";
 import app from "./app";
 import dotenv from "dotenv";
+import mongoose from "mongoose";
 
 dotenv.config();
 
 let server: Server | null = null;
 const port = process.env.PORT || 5000;
 
-async function connectDb() {
+
+async function connectDb(): Promise<void> {
     try {
-        // ! Connect to your database here
-        console.log("*** database connected succesfull!!");
+        // ? connect to database
+        const mongoUri = process.env.MONGO_URI || "mongodb://localhost:27017/mydatabase";
+        if (!mongoUri) {
+            throw new Error("MONGO_URI environment variable is required");
+        }
+        await mongoose.connect(mongoUri);
+
+        console.log(" Database connected successfully!");
     } catch (error) {
-        console.log("*** Db connection failed!!");
+        console.error("Database connection failed:", error);
         process.exit(1);
     }
 }
 
-async function startServer() {
+
+async function startServer(): Promise<void> {
     try {
         await connectDb();
+
         server = http.createServer(app);
 
         server.listen(port, () => {
-            console.log(` Server is running on port ${port}`);
+            console.log(`Server running at http://localhost:${port}`);
         });
 
-        handleProcessEvents();
+        registerProcessEvents();
     } catch (error) {
-        console.error("Error during server startup:", error);
+        console.error("Error while starting the server:", error);
         process.exit(1);
     }
 }
 
-async function gracefulShutdown(signal: string) {
-    console.warn(` Received ${signal}, shutting down gracefully...`);
+
+async function gracefulShutdown(signal: string): Promise<void> {
+    console.warn(`⚠️ Received ${signal}. Closing server gracefully...`);
 
     if (server) {
         server.close(async () => {
-            console.log(" HTTP server closed.");
+            console.log("HTTP server closed.");
 
             try {
-                console.log("Server shutdown complete.");
+                await mongoose.connection.close();
+                console.log(" Database connection closed.");
             } catch (error) {
-                console.error(" Error during shutdown:", error);
+                console.error("Error closing database connection:", error);
             }
 
+            console.log("Server shutdown completed.");
             process.exit(0);
         });
     } else {
@@ -53,7 +67,8 @@ async function gracefulShutdown(signal: string) {
     }
 }
 
-function handleProcessEvents() {
+
+function registerProcessEvents(): void {
     process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
     process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
@@ -63,9 +78,10 @@ function handleProcessEvents() {
     });
 
     process.on("unhandledRejection", (reason) => {
-        console.error(" Unhandled Rejection:", reason);
-        gracefulShutdown("unhandledRejection");
+        console.error(" Unhandled Promise Rejection:", reason);
+        process.exit(1);
     });
 }
 
 startServer();
+

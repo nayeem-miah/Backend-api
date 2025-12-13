@@ -4,7 +4,7 @@ import sendResponse from "../../utils/sendResponse";
 import catchAsync from "../../utils/catchAsync";
 
 const createUser = catchAsync(async (req: Request, res: Response) => {
-    const user = await UserService.createUser(req.body);
+    const user = await UserService.createUser(req);
     sendResponse(res, {
         statusCode: 200,
         message: "user create success",

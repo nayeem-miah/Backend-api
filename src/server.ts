@@ -1,85 +1,45 @@
-/* eslint-disable no-console */
-import http, { Server } from "http";
-import mongoose from "mongoose";
-import app from "./app";
-import config from "./app/config";
+import { Server } from 'http';
+import app from './app';
+import config from './app/config';
 
 
-let server: Server | null = null;
-const port = config.port || 5000;
+async function bootstrap() {
 
-async function connectDb(): Promise<void> {
+    let server: Server;
+
     try {
-        // ? connect to database
-        const mongoUri = config.database_url || "mongodb://localhost:27017/mydatabase";
-        if (!mongoUri) {
-            throw new Error("MONGO_URI environment variable is required");
-        }
-        await mongoose.connect(mongoUri);
 
-        console.log(" Database connected successfully!");
-    } catch (error) {
-        console.error("Database connection failed:", error);
-        process.exit(1);
-    }
-}
-
-
-async function startServer(): Promise<void> {
-    try {
-        await connectDb();
-
-        server = http.createServer(app);
-
-        server.listen(port, () => {
-            console.log(`Server running at http://localhost:${port}`);
+        server = app.listen(config.port, () => {
+            console.log(`🚀 Server is running on http://localhost:${config.port}`);
         });
 
-        registerProcessEvents();
-    } catch (error) {
-        console.error("Error while starting the server:", error);
-        process.exit(1);
-    }
-}
-
-
-async function gracefulShutdown(signal: string): Promise<void> {
-    console.warn(`⚠️ Received ${signal}. Closing server gracefully...`);
-
-    if (server) {
-        server.close(async () => {
-            console.log("HTTP server closed.");
-
-            try {
-                await mongoose.connection.close();
-                console.log(" Database connection closed.");
-            } catch (error) {
-                console.error("Error closing database connection:", error);
+        const exitHandler = () => {
+            if (server) {
+                server.close(() => {
+                    console.log('Server closed gracefully.');
+                    process.exit(1); // Exit with a failure code
+                });
+            } else {
+                process.exit(1);
             }
+        };
 
-            console.log("Server shutdown completed.");
-            process.exit(0);
+        // Handle unhandled promise rejections
+        process.on('unhandledRejection', (error) => {
+            console.log('Unhandled Rejection is detected, we are closing our server...');
+            if (server) {
+                server.close(() => {
+                    console.log(error);
+                    process.exit(1);
+                });
+            } else {
+                process.exit(1);
+            }
         });
-    } else {
-        process.exit(0);
+    } catch (error) {
+        console.error('Error during server startup:', error);
+        process.exit(1);
     }
 }
 
-
-function registerProcessEvents(): void {
-    process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
-    process.on("SIGINT", () => gracefulShutdown("SIGINT"));
-
-    process.on("uncaughtException", (error) => {
-        console.error(" Uncaught Exception:", error);
-        gracefulShutdown("uncaughtException");
-    });
-
-    process.on("unhandledRejection", (reason) => {
-        console.error(" Unhandled Promise Rejection:", reason);
-        process.exit(1);
-    });
-}
-
-startServer();
-
+bootstrap();

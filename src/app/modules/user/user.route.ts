@@ -1,7 +1,7 @@
 import express, { NextFunction, Request, Response } from "express";
 import { UserController } from "./user.controller";
 import { authRateLimiter } from "../../middlewares/authRateLimiter";
-import { fileUpload } from "../../../utils/fileUpload";
+import { fileUpload } from "../../utils/fileUpload";
 import { userValidation } from "./user.validation";
 
 const router = express.Router();

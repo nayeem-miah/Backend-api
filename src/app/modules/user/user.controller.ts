@@ -7,6 +7,7 @@ const createUser = catchAsync(async (req: Request, res: Response) => {
     const user = await UserService.createUser(req);
     sendResponse(res, {
         statusCode: 200,
+        success: true,
         message: "user create successfully",
         data: user
     })
@@ -16,6 +17,7 @@ const getUsers = catchAsync(async (req: Request, res: Response) => {
     const users = await UserService.getUsers();
     sendResponse(res, {
         statusCode: 200,
+        success: true,
         message: "user create success",
         data: users
     })

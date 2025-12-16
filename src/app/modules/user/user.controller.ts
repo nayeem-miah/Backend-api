@@ -1,10 +1,11 @@
 import { Request, Response } from "express";
-import { UserService } from "./user.service";
-import sendResponse from "../../utils/sendResponse";
 import catchAsync from "../../utils/catchAsync";
+import sendResponse from "../../utils/sendResponse";
+import { UserService } from "./user.service";
 
 const createUser = catchAsync(async (req: Request, res: Response) => {
     const user = await UserService.createUser(req);
+
     sendResponse(res, {
         statusCode: 200,
         success: true,
@@ -18,8 +19,7 @@ const getUsers = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: 200,
         success: true,
-        message: "user create success",
-        data: users
+        message: "users retrieved successfully", data: users
     })
 });
 

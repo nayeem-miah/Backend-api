@@ -1,10 +1,11 @@
 import { Request } from "express";
+import config from "../../config";
 import { ApiError } from "../../errors/apiError";
 import prisma from "../../prisma/prisma";
-import { fileUpload } from "../../utils/fileUpload";
 import { sendEmail } from "../../utils/emailSender";
+import { fileUpload } from "../../utils/fileUpload";
 import { stripe } from "../../utils/stripe";
-import config from "../../config";
+import { getIO } from "../../utils/socket";
 
 const createUser = async (req: Request) => {
 
@@ -118,16 +119,26 @@ const createUser = async (req: Request) => {
     });
     // ! email sent done --------------------------------------------
 
+    // 🔔 Realtime notify
+    const io = getIO();
+    io.emit("user-registered", {
+        message: "New user registered",
+        data: result,
+    });
+
+
     return { clientSecret: session.url, result }
     // ! done payment --------------------------------------------
 };
 
 const getUsers = async () => {
-    return await prisma.user.findMany({
+    return prisma.user.findMany({
         include: { posts: true },
     });
-
 };
+
+
+
 
 export const UserService = {
     createUser,

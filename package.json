@@ -6,7 +6,8 @@
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "lint": "npx eslint ./src"
+    "lint": "npx eslint ./src",
+     "make:module": "ts-node scripts/makeModule.ts"
   },
   "keywords": [],
   "author": "Md Nayeem Miah",

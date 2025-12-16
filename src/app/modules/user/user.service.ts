@@ -5,14 +5,25 @@ import { sendEmail } from "../../utils/emailSender";
 import { stripe } from "../../utils/stripe";
 import config from "../../config";
 import ApiError from "../../errors/apiError";
+import bcrypt from "bcryptjs";
 
 const createUser = async (req: Request) => {
+    const {password} = req.body;
+    
 
     const isExistingUser = await prisma.user.findUnique({
         where: {
             email: req.body.email
         }
     })
+    if(!password){
+        throw new ApiError(500, "password is requied")
+    }
+   
+
+    const hashPassword = await bcrypt.hash(password,10)
+
+
 
     if (isExistingUser) {
         throw new ApiError(403,"User already exits!")
@@ -32,6 +43,7 @@ const createUser = async (req: Request) => {
         data: {
             name: req.body.name,
             email: req.body.email,
+            password:hashPassword,
             profilePicture: image_url
         }
     })

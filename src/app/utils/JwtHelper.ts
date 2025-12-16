@@ -6,8 +6,9 @@ const generateToken = (payload: any, secret: Secret, expiresIn: string) => {
         algorithm: "HS256",
         expiresIn
     } as SignOptions
-    );
+    ); 
 
+ 
     return token;
 }
 

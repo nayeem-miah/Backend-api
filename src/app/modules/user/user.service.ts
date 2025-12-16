@@ -1,10 +1,10 @@
 import { Request } from "express";
-import { ApiError } from "../../errors/apiError";
 import prisma from "../../prisma/prisma";
 import { fileUpload } from "../../utils/fileUpload";
 import { sendEmail } from "../../utils/emailSender";
 import { stripe } from "../../utils/stripe";
 import config from "../../config";
+import ApiError from "../../errors/apiError";
 
 const createUser = async (req: Request) => {
 
@@ -15,12 +15,12 @@ const createUser = async (req: Request) => {
     })
 
     if (isExistingUser) {
-        throw new ApiError("User already exits!", 403)
+        throw new ApiError(403,"User already exits!")
     }
 
     // ! file uploading -------------------------------------
     if (!req.file) {
-        throw new ApiError("file is required!", 404);
+        throw new ApiError(404,"file is required!");
     }
 
     const uploadedResult = await fileUpload.uploadToCloudinary(req.file);

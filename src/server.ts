@@ -3,13 +3,14 @@ import http, { Server } from "http";
 import app from "./app";
 import config from "./app/config";
 import { initSocket } from "./app/utils/socket";
+import { connectRedis } from "./app/config/redis.config";
 
 async function bootstrap() {
     let server: Server;
 
     try {
+        await connectRedis()
         server = http.createServer(app);
-
         // * Initialize Socket.IO
         initSocket(server);
 

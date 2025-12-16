@@ -20,9 +20,6 @@ const login = catchAsync(async (req: Request, res: Response) => {
         sameSite:"none",
         maxAge: 1000 * 60 * 60 * 24 * 90
     })
-    
-
-
     sendResponse(res, {
         statusCode: 201,
         success: true,
@@ -33,8 +30,22 @@ const login = catchAsync(async (req: Request, res: Response) => {
     })
 })
 
+const logout = catchAsync(async (req: Request, res: Response) => {
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken");    
+    sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: "User logged out successfully!",
+        data: null
+    });
+});
+
+
+
 
 
 export const AuthController = {
  login,
+ logout
 };

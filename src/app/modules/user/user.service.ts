@@ -49,7 +49,6 @@ const createUser = async (req: Request) => {
         }
     })
 
-    // ! email sender  --------------------------------------
     await sendEmail({
         to: req.body.email,
         subject: "Welcome to SMT Project 🎉",

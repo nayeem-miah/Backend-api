@@ -1,13 +1,15 @@
-
-export class ApiError extends Error {
-    public statusCode: number;
-    public isOperational: boolean;
-
-    constructor(message: string, statusCode: number) {
-        super(message);
+class ApiError extends Error {
+    statusCode: number;
+    constructor(statusCode: number, message: string | undefined, stack = '') {
+        super(message)
         this.statusCode = statusCode;
-        this.isOperational = true;
-
-        Error.captureStackTrace(this, this.constructor);
+        if (stack) {
+            this.stack = stack
+        }
+        else {
+            Error.captureStackTrace(this, this.constructor);
+        }
     }
 }
+
+export default ApiError;

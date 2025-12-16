@@ -6,7 +6,8 @@
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "lint": "npx eslint ./src"
+    "lint": "npx eslint ./src",
+     "make:module": "ts-node scripts/makeModule.ts"
   },
   "keywords": [],
   "author": "Md Nayeem Miah",
@@ -19,6 +20,7 @@
     "cloudinary": "^1.41.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "ejs": "^3.1.10",
     "express": "^4.22.1",
     "express-rate-limit": "^8.2.1",
     "http-status": "^2.1.0",
@@ -28,6 +30,7 @@
     "multer": "^2.0.2",
     "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^7.0.11",
+    "redis": "^5.10.0",
     "socket.io": "^4.8.1",
     "stripe": "^20.0.0",
     "zod": "^4.1.13"
@@ -37,6 +40,7 @@
     "@types/bcrypt": "^6.0.0",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
+    "@types/ejs": "^3.1.5",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^2.0.0",

@@ -46,10 +46,6 @@ const login = async (payload: {email:string, password:string}) => {
         refreshToken,
         
      }
-
-    
-    
-
 }
 
 

@@ -1,43 +1,44 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { Server } from 'http';
-import app from './app';
-import config from './app/config';
+
+import http, { Server } from "http";
+import app from "./app";
+import config from "./app/config";
+import { initSocket } from "./app/utils/socket";
 
 async function bootstrap() {
-
     let server: Server;
 
     try {
+        server = http.createServer(app);
 
-        server = app.listen(config.port, () => {
+        // * Initialize Socket.IO
+        initSocket(server);
+
+        server.listen(config.port, () => {
             console.log(`🚀 Server is running on http://localhost:${config.port}`);
         });
 
         const exitHandler = () => {
             if (server) {
                 server.close(() => {
-                    console.log('Server closed gracefully.');
-                    process.exit(1); // Exit with a failure code
+                    console.log("Server closed gracefully.");
+                    process.exit(1);
                 });
             } else {
                 process.exit(1);
             }
         };
 
-        // Handle unhandled promise rejections
-        process.on('unhandledRejection', (error) => {
-            console.log('Unhandled Rejection is detected, we are closing our server...');
-            if (server) {
-                server.close(() => {
-                    console.log(error);
-                    process.exit(1);
-                });
-            } else {
-                process.exit(1);
-            }
+        process.on("unhandledRejection", (error) => {
+            console.log("Unhandled Rejection detected, shutting down...");
+            console.error(error);
+            exitHandler();
         });
+
+        process.on("SIGTERM", exitHandler);
+        process.on("SIGINT", exitHandler);
+
     } catch (error) {
-        console.error('Error during server startup:', error);
+        console.error("Error during server startup:", error);
         process.exit(1);
     }
 }

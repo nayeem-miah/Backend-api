@@ -1,11 +1,12 @@
 import { Request } from "express";
 import prisma from "../../prisma/prisma";
-import { fileUpload } from "../../utils/fileUpload";
 import { sendEmail } from "../../utils/emailSender";
+import { fileUpload } from "../../utils/fileUpload";
 import { stripe } from "../../utils/stripe";
-import config from "../../config";
+import { getIO } from "../../utils/socket";
 import ApiError from "../../errors/apiError";
 import bcrypt from "bcryptjs";
+import config from "../../config";
 
 const createUser = async (req: Request) => {
     const {password} = req.body;
@@ -26,12 +27,12 @@ const createUser = async (req: Request) => {
 
 
     if (isExistingUser) {
-        throw new ApiError(403,"User already exits!")
+        throw new ApiError(403, "User already exits!")
     }
 
     // ! file uploading -------------------------------------
     if (!req.file) {
-        throw new ApiError(404,"file is required!");
+        throw new ApiError(404, "file is required!");
     }
 
     const uploadedResult = await fileUpload.uploadToCloudinary(req.file);
@@ -130,16 +131,26 @@ const createUser = async (req: Request) => {
     });
     // ! email sent done --------------------------------------------
 
+    // 🔔 Realtime notify
+    const io = getIO();
+    io.emit("user-registered", {
+        message: "New user registered",
+        data: result,
+    });
+
+
     return { clientSecret: session.url, result }
     // ! done payment --------------------------------------------
 };
 
 const getUsers = async () => {
-    return await prisma.user.findMany({
+    return prisma.user.findMany({
         include: { posts: true },
     });
-
 };
+
+
+
 
 export const UserService = {
     createUser,

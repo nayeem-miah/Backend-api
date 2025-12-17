@@ -3,15 +3,20 @@ import http, { Server } from "http";
 import app from "./app";
 import config from "./app/config";
 import { initSocket } from "./app/utils/socket";
+import { registerSocketEvents } from "./app/modules/chat/chat.socket";
 
 async function bootstrap() {
     let server: Server;
 
     try {
-        server = http.createServer(app);
 
+        // *  socket io ------------------
+        server = http.createServer(app);
         // * Initialize Socket.IO
-        initSocket(server);
+        const io = initSocket(server);
+        registerSocketEvents(io);
+        // *  socket io ------------------
+
 
         server.listen(config.port, () => {
             console.log(`🚀 Server is running on http://localhost:${config.port}`);

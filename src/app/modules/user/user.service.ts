@@ -1,5 +1,4 @@
 import { Request } from "express";
-import prisma from "../../prisma/prisma";
 import { sendEmail } from "../../utils/emailSender";
 import { fileUpload } from "../../utils/fileUpload";
 import { stripe } from "../../utils/stripe";
@@ -7,27 +6,25 @@ import { getIO } from "../../utils/socket";
 import ApiError from "../../errors/apiError";
 import bcrypt from "bcryptjs";
 import config from "../../config";
+import { prisma } from "../../prisma/prisma";
 
 const createUser = async (req: Request) => {
-    const {password} = req.body;
-    
+    const { password } = req.body;
 
     const isExistingUser = await prisma.user.findUnique({
         where: {
             email: req.body.email
         }
     })
-    if(!password){
-        throw new ApiError(500, "password is requied")
+
+    if (!password) {
+        throw new ApiError(500, "password is required")
     }
-   
 
-    const hashPassword = await bcrypt.hash(password,10)
-
-
+    const hashPassword = await bcrypt.hash(password, 10)
 
     if (isExistingUser) {
-        throw new ApiError(403, "User already exits!")
+        throw new ApiError(403, "User already exists!")
     }
 
     // ! file uploading -------------------------------------
@@ -44,8 +41,11 @@ const createUser = async (req: Request) => {
         data: {
             name: req.body.name,
             email: req.body.email,
-            password:hashPassword,
-            profilePicture: image_url
+            password: hashPassword,
+            role: req.body.role ?? "USER",
+            profilePicture: image_url,
+            authProvider: "LOCAL",
+        
         }
     })
 
@@ -59,7 +59,6 @@ const createUser = async (req: Request) => {
     `,
     });
     // ! email sent done------------------------------------------
-
 
     // ! implement payment system ----------------------------
     const session = await stripe.checkout.sessions.create({
@@ -137,21 +136,117 @@ const createUser = async (req: Request) => {
         data: result,
     });
 
-
     return { clientSecret: session.url, result }
     // ! done payment --------------------------------------------
 };
 
+// New: Find or create Google user
+const findOrCreateGoogleUser = async (profile: {
+    id: string;
+    email: string;
+    name: string;
+    picture?: string;
+}) => {
+    try {
+        // Try to find by email first (email is unique, googleId may not be indexed yet)
+        let user = await prisma.user.findUnique({
+            where: { email: profile.email },
+        });
+
+        // If user exists with this email
+        if (user) {
+            // Check if this is a Google user or existing local user
+            if (!user.googleId) {
+                // Update existing local user with Google info
+                user = await prisma.user.update({
+                    where: { id: user.id },
+                    data: {
+                        googleId: profile.id,
+                        authProvider: "GOOGLE",
+                        profilePicture: profile.picture || user.profilePicture,
+                        isVerified: true,
+                    },
+                });
+            }
+            // User already has Google login, just return
+            return user;
+        }
+
+        // No user found with this email, create new Google user
+        user = await prisma.user.create({
+            data: {
+                googleId: profile.id,
+                email: profile.email,
+                name: profile.name,
+                profilePicture: profile.picture,
+                authProvider: "GOOGLE",
+                isVerified: true,
+                password: null,
+            },
+        });
+
+        console.log("google login", user);
+        
+        
+
+        // Send welcome email
+        await sendEmail({
+            to: profile.email,
+            subject: "Welcome to SMT Project 🎉",
+            html: `
+          <h2>Hello ${profile.name}</h2>
+          <p>Welcome to our platform! You've successfully signed up with Google.</p>
+          <p>Happy coding 🚀</p>
+        `,
+        });
+
+        // 🔔 Realtime notify
+        const io = getIO();
+        io.emit("user-registered", {
+            message: "New user registered via Google",
+            data: user,
+        });
+
+        return user;
+    } catch (error) {
+        throw new ApiError(500, `Error in Google authentication: ${error}`);
+    }
+};
+
+// New: Find user by ID (for passport deserialize)
+const findUserById = async (id: string) => {
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id },
+            // include: { posts: true }, // Remove if not needed
+        });
+
+        if (!user) {
+            throw new ApiError(404, "User not found");
+        }
+
+        return user;
+    } catch (error) {
+        throw new ApiError(500, `Error finding user: ${error}`);
+    }
+};
+
 const getUsers = async () => {
     return prisma.user.findMany({
-        include: { posts: true },
     });
 };
 
-
-
+// New: Get current authenticated user
+const getCurrentUser = async (userId: string) => {
+    return prisma.user.findUnique({
+        where: { id: userId },
+    });
+};
 
 export const UserService = {
     createUser,
     getUsers,
+    findOrCreateGoogleUser,
+    findUserById,
+    getCurrentUser,
 };

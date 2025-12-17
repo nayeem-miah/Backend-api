@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Request } from "express";
 import { sendEmail } from "../../utils/emailSender";
 import { fileUpload } from "../../utils/fileUpload";
@@ -7,6 +8,7 @@ import ApiError from "../../errors/apiError";
 import bcrypt from "bcryptjs";
 import config from "../../config";
 import { prisma } from "../../prisma/prisma";
+import { PrismaQueryBuilder } from "../../utils/QueryBuilder";
 
 const createUser = async (req: Request) => {
     const { password } = req.body;
@@ -27,7 +29,6 @@ const createUser = async (req: Request) => {
         throw new ApiError(403, "User already exists!")
     }
 
-    // ! file uploading -------------------------------------
     if (!req.file) {
         throw new ApiError(404, "file is required!");
     }
@@ -35,7 +36,6 @@ const createUser = async (req: Request) => {
     const uploadedResult = await fileUpload.uploadToCloudinary(req.file);
     const image_url = uploadedResult?.secure_url;
 
-    // !file uploaded done -------------------------------------
 
     const result = await prisma.user.create({
         data: {
@@ -58,9 +58,7 @@ const createUser = async (req: Request) => {
       <p>Happy coding 🚀</p>
     `,
     });
-    // ! email sent done------------------------------------------
 
-    // ! implement payment system ----------------------------
     const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
         mode: "payment",
@@ -92,7 +90,7 @@ const createUser = async (req: Request) => {
             `${config.stripe.frontendUrl}/payment/cancel`,
     });
 
-    // ! send payment success email --------------------------
+
     await sendEmail({
         to: req.body.email,
         subject: "Payment Successful 🎉",
@@ -127,7 +125,7 @@ const createUser = async (req: Request) => {
     </div>
   `,
     });
-    // ! email sent done --------------------------------------------
+
 
     // 🔔 Realtime notify
     const io = getIO();
@@ -137,7 +135,7 @@ const createUser = async (req: Request) => {
     });
 
     return { clientSecret: session.url, result }
-    // ! done payment --------------------------------------------
+ 
 };
 
 // New: Find or create Google user
@@ -218,9 +216,7 @@ const findUserById = async (id: string) => {
     try {
         const user = await prisma.user.findUnique({
             where: { id },
-            // include: { posts: true }, // Remove if not needed
         });
-
         if (!user) {
             throw new ApiError(404, "User not found");
         }
@@ -231,22 +227,97 @@ const findUserById = async (id: string) => {
     }
 };
 
-const getUsers = async () => {
-    return prisma.user.findMany({
-    });
+
+const getAllUsers = async (query: Record<string, any>) => {
+  const qb = new PrismaQueryBuilder(query)
+    .filter()
+    .search(["name", "email"])
+    .sort()
+    .fields()
+    .paginate();
+
+  const prismaQuery = qb.build();
+
+  const [data, total] = await Promise.all([
+    prisma.user.findMany(prismaQuery),
+    prisma.user.count({ where: prismaQuery.where }),
+  ]);
+  return {
+    meta: qb.getMeta(total),
+    data
+  };
 };
 
 // New: Get current authenticated user
-const getCurrentUser = async (userId: string) => {
+const getSingleUser = async (userId: string) => {
     return prisma.user.findUnique({
         where: { id: userId },
     });
 };
 
+const userUpdateProfile = async (userId: string, payload: any) => {
+  const { name, oldPassword, newPassword, email } = payload;
+  
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  const updateData: any = {};
+
+  // update name
+  if (name) {
+    updateData.name = name;
+  }
+
+  if(email) {
+    updateData.email = email
+  }
+
+
+  // update password
+  if (oldPassword && newPassword) {
+
+  if (!user.password) {
+    throw new Error("Password not set for this user");
+  }
+
+  const isMatch = await bcrypt.compare(oldPassword, user.password);
+
+  if (!isMatch) {
+    throw new Error("Old password is incorrect");
+  }
+
+  updateData.password = await bcrypt.hash(newPassword, 10);
+}
+
+
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: updateData,
+  });
+
+  return updatedUser;
+};
+
+const deleteUser = async (userId: string) => {
+  return prisma.user.delete({
+    where: { id: userId },
+  });
+};
+
+
+
 export const UserService = {
     createUser,
-    getUsers,
+    getAllUsers,
     findOrCreateGoogleUser,
     findUserById,
-    getCurrentUser,
+    getSingleUser,
+    userUpdateProfile,
+    deleteUser
 };

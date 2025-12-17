@@ -17,7 +17,21 @@ router.post("/",
     }
 );
 
-router.get("/",auth(UserRole.ADMIN), UserController.getUsers);
+router.patch("/profile", auth(UserRole.USER, UserRole.ADMIN), fileUpload.upload.single("file"), UserController.userUpdateProfile);
+
+// Get current user (protected)
+router.get("/me", auth(UserRole.USER, UserRole.ADMIN), UserController.getSingleUser);
+
+// FIND USER BY ID (protected)
+router.get("/:id", auth( UserRole.ADMIN), UserController.getFindUserById);
+
+// GET ALL USERS (protected)
+router.get("/", auth(UserRole.ADMIN), UserController.getAllUsers);
+
+// DELETE USER BY ID (protected)
+router.delete("/:id", auth(UserRole.ADMIN), UserController.deleteUser);
+
+
 
 // New Google OAuth routes
 router.get(
@@ -27,8 +41,7 @@ router.get(
     })
 );
 
-router.get(
-    "/auth/google/callback",
+router.get( "/auth/google/callback",
     passport.authenticate('google', {
         failureRedirect: '/login',
         failureMessage: true
@@ -37,9 +50,6 @@ router.get(
         res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard`);
     }
 );
-
-// Get current user (protected)
-router.get("/me", auth(UserRole.USER, UserRole.ADMIN), UserController.getCurrentUser);
 
 
 

@@ -18,8 +18,6 @@ enum AuthProvider {
   GOOGLE
 }
 
-
-
 model User {
   id             String       @id @default(auto()) @map("_id") @db.ObjectId
   name           String
@@ -28,9 +26,10 @@ model User {
   role           UserRole     @default(USER)
   profilePicture String?
   isVerified     Boolean      @default(false)
-  googleId       String?      @unique 
+  googleId       String?      
   authProvider   AuthProvider @default(LOCAL)
   posts          Post[]     
+  createdAt      DateTime     @default(now())  
 
   @@map("users")
 }

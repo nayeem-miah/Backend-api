@@ -14,8 +14,8 @@ const createUser = catchAsync(async (req: Request, res: Response) => {
     })
 });
 
-const getUsers = catchAsync(async (req: Request, res: Response) => {
-    const users = await UserService.getUsers();
+const getAllUsers = catchAsync(async (req: Request, res: Response) => {
+    const users = await UserService.getAllUsers(req.query);
     sendResponse(res, {
         statusCode: 200,
         success: true,
@@ -25,17 +25,28 @@ const getUsers = catchAsync(async (req: Request, res: Response) => {
 });
 
 // New: Get current authenticated user
-const getCurrentUser = catchAsync(async (req: Request, res: Response) => {
-    if (!req.user) {
-        return sendResponse(res, {
-            statusCode: 401,
-            success: false,
-            message: "Not authenticated",
-            data: null
-        });
-    }
+const getSingleUser = catchAsync(async (req: Request, res: Response) => {
+    
+      const decodedUser = req.user as any;
 
-    const user = await UserService.getCurrentUser((req.user as any).id);
+  const user = await UserService.getSingleUser(decodedUser.userId );
+
+ 
+    sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: "Current user retrieved successfully",
+        data: user
+    });
+});
+
+const getFindUserById = catchAsync(async (req: Request, res: Response) => {
+    
+      const decodedUser = req.user as any;
+
+  const user = await UserService.findUserById(decodedUser.userId );
+
+ 
     sendResponse(res, {
         statusCode: 200,
         success: true,
@@ -45,10 +56,41 @@ const getCurrentUser = catchAsync(async (req: Request, res: Response) => {
 });
 
 
+const userUpdateProfile = catchAsync(async(req: Request, res: Response) =>{
+     const decodedUser = req.user as any;;
+     const payload = req.body;
+
+   const result = await UserService.userUpdateProfile(decodedUser.userId, payload)
+  
+     sendResponse(res, {
+    success: true,
+    statusCode: 201,
+    message: "User profile updated successfully",
+    data:result
+  });
+})
+
+
+
+const deleteUser = catchAsync(async (req: Request, res: Response) => {
+    const user = await UserService.deleteUser(req.params.id);
+    sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: "User deleted successfully",
+        data: user
+    })
+}); 
+
+
+
 
 export const UserController = {
     createUser,
-    getUsers,
-    getCurrentUser,
+    getAllUsers,
+   getSingleUser,
+   getFindUserById,
+   userUpdateProfile,
+   deleteUser
    
 };

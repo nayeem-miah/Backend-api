@@ -8,6 +8,11 @@ export default {
     port: process.env.PORT,
     database_url: process.env.DATABASE_URL,
 
+    jwt: {
+        accessToken: process.env.JWT_ACCESS_SECRET,
+        refreshToken: process.env.JWT_REFRESH_SECRET
+    },
+
     cloudinary: {
         cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
         api_key: process.env.CLOUDINARY_API_KEY,
@@ -40,5 +45,23 @@ export default {
         SSL_FAIL_FRONTEND_URL: process.env.SSL_FAIL_FRONTEND_URL,
         SSL_CANCEL_FRONTEND_URL: process.env.SSL_CANCEL_FRONTEND_URL,
         SSL_IPN_URL: process.env.SSL_IPN_URL,
+        username: process.env.REDIS_USERNAME,
+        password: process.env.REDIS_PASSWORD,
+    },
+    socket: {
+        host: process.env.REDIS_HOST,
+        port: Number(process.env.REDIS_PORT)
+    },
+
+    // Google OAuth (NEW)
+    google: {
+        clientId: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        callbackURL: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:5000/api/v1/users/auth/google/callback',
+    },
+
+    // Session Secret (NEW)
+    session: {
+        secret: process.env.SESSION_SECRET || 'fallback-secret-change-this-in-production',
     },
 }

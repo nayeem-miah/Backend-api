@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import config from "../../config";
 import ApiError from "../../errors/apiError";
-import prisma from "../../prisma/prisma"
+import { prisma } from "../../prisma/prisma";
+
 import { jwtHelper } from "../../utils/JwtHelper";
 import bcrypt from 'bcrypt'
 

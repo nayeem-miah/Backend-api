@@ -1,36 +1,48 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { NextFunction, Request, Response } from "express"
-
-import  httpStatus  from 'http-status';
+import { NextFunction, Request, Response } from "express";
+import httpStatus from 'http-status';
 import { jwtHelper } from "../utils/JwtHelper";
 import ApiError from "../errors/apiError";
-
 
 const auth = (...roles: string[]) => {
     return async (req: Request & { user?: any }, res: Response, next: NextFunction) => {
         try {
-            const token = req.cookies.accessToken;
+            let user;
 
-            if (!token) {
-                throw new ApiError(httpStatus.UNAUTHORIZED,"You are not authorized!")
+            // First, check for JWT token (for regular login)
+            const token = req.cookies.accessToken;
+            
+            if (token) {
+                // JWT authentication
+                const secret = process.env.JWT_ACCESS_SECRET as string;
+                const verifyUser = jwtHelper.verifyToken(token, secret);
+                user = verifyUser;
+            } 
+            // If no JWT, check for Passport session (for Google login)
+            else if (req.isAuthenticated && req.isAuthenticated()) {
+                user = req.user;
             }
 
-              const secret = process.env.JWT_ACCESS_SECRET as string;
+            // If no authentication found
+            if (!user) {
+                throw new ApiError(httpStatus.UNAUTHORIZED, "You are not authorized!");
+            }
 
-            const verifyUser = jwtHelper.verifyToken(token, secret);
+            // Attach user to request
+            req.user = user;
 
-            req.user = verifyUser;
-
-            if (roles.length && !roles.includes(verifyUser.role)) {
-                throw new ApiError(httpStatus.UNAUTHORIZED,"You are not authorized!")
+            // Check role if roles are specified
+            if (roles.length && !roles.includes(user.role)) {
+                throw new ApiError(httpStatus.FORBIDDEN, "You don't have permission to access this resource!");
             }
 
             next();
         }
         catch (err) {
-            next(err)
+            next(err);
         }
     }
 }
 
 export default auth;
+

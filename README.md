@@ -45,6 +45,7 @@ This project is designed to serve as a **solid foundation** for small to large-s
 
 * 💰 **Stripe payment integration**
 * 🇧🇩 **SSLCommerz payment gateway**
+* 🇧🇩 **amarpay payment gateway**
 * 🔔 **Webhook handling** for payment verification
 * 📜 Secure transaction lifecycle handling
 
@@ -57,6 +58,7 @@ This project is designed to serve as a **solid foundation** for small to large-s
 * 🖼️ Image & file upload with validation
 
 ---
+
 
 ### 📡 Real-Time Features
 

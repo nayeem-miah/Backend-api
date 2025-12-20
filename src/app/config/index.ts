@@ -64,4 +64,18 @@ export default {
     session: {
         secret: process.env.SESSION_SECRET || 'fallback-secret-change-this-in-production',
     },
+
+    // amar pay 
+    amarpay: {
+        store_id: process.env.AMARPAY_STORE_ID,
+        signature_key: process.env.AMARPAY_SIGNATURE_KEY,
+        payment_url: process.env.AMARPAY_PAYMENT_URL,
+        verify_url: process.env.AMARPAY_VERIFY_URL
+    },
+
+    //  redirect url
+    frontendSuccessUrl: process.env.FRONTEND_SUCCESS_URL,
+    frontendFailUrl: process.env.FRONTEND_FAIL_URL,
+    frontendCancelUrl: process.env.FRONTEND_CANCEL_URL
+
 }

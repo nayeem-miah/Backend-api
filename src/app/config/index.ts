@@ -76,6 +76,9 @@ export default {
     //  redirect url
     frontendSuccessUrl: process.env.FRONTEND_SUCCESS_URL,
     frontendFailUrl: process.env.FRONTEND_FAIL_URL,
-    frontendCancelUrl: process.env.FRONTEND_CANCEL_URL
+    frontendCancelUrl: process.env.FRONTEND_CANCEL_URL,
+
+    // weather
+    weatherApiKey: process.env.WEATHER_API_KEY
 
 }
